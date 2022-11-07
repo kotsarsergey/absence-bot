@@ -1,0 +1,24 @@
+import http from "http";
+import { Bot, Context, InlineKeyboard } from "grammy";
+import { getUser } from "./db/db-service";
+import { bot } from "./bot/bot";
+
+
+const hostname = "127.0.0.1";
+const port = 3000;
+
+
+const server = http.createServer((req, res) => {
+  res.statusCode = 200;
+  res.setHeader("Content-Type", "text/plain");
+  res.end("Hello World");
+});
+
+bot.start({
+  onStart: () =>
+    console.log(`bot started, nice`)
+});
+
+server.listen(port, hostname, () => {
+  console.log(`Server running at http://${hostname}:${port}/`);
+});
