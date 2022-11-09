@@ -1,10 +1,9 @@
-import { Bot } from "grammy";
 import { getAdmins, insertHistory, User, History } from "../../db/db-service";
 import {
   MyContext,
   MyConversation,
 } from "../interfaces/custom-context.interface";
-import { adminMenu, returnKeyboard, simpleMenu } from "../keyboard/keyboard";
+import { returnKeyboard } from "../keyboard/keyboard";
 
 async function notifyAllAdmins(
   historyRecord: History,

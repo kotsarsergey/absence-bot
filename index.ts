@@ -1,6 +1,4 @@
 import http from "http";
-import { Bot, Context, InlineKeyboard } from "grammy";
-import { getUser } from "./db/db-service";
 import { bot } from "./bot/bot";
 
 

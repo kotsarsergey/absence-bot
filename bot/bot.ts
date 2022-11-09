@@ -1,23 +1,18 @@
-import { Bot, InlineKeyboard, session } from "grammy";
+import { Bot, session } from "grammy";
 import {
   getUser,
   upsertUser,
-  insertHistory,
-  User,
-  getAdmins,
-  History,
   getHistory,
 } from "../db/db-service";
 import { TELEGRAM_BOT_TOKEN } from "../utils/environment";
 import {
   createInitialSessionData,
   MyContext,
-  MyConversation,
 } from "./interfaces/custom-context.interface";
 import { conversations, createConversation } from "@grammyjs/conversations";
 import { registeringConversation } from "./conversations/register-convo";
 import { changeNameConversation } from "./conversations/change-name-convo";
-import { adminMenu, returnKeyboard, simpleMenu } from "./keyboard/keyboard";
+import { returnKeyboard } from "./keyboard/keyboard";
 
 const bot = new Bot<MyContext>(TELEGRAM_BOT_TOKEN);
 bot.use(session({ initial: () => createInitialSessionData() }));
