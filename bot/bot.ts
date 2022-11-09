@@ -6,6 +6,7 @@ import {
   User,
   getAdmins,
   History,
+  getHistory,
 } from "../db/db-service";
 import { TELEGRAM_BOT_TOKEN } from "../utils/environment";
 import {
@@ -14,115 +15,9 @@ import {
   MyConversation,
 } from "./interfaces/custom-context.interface";
 import { conversations, createConversation } from "@grammyjs/conversations";
-
-async function notifyAllAdmins(historyRecord: History, user: string) {
-  const admins: User[] = await getAdmins();
-  console.log(
-    `Starting to send notifications to following admins: \n${JSON.stringify(
-      admins
-    )}`
-  );
-
-  if (admins.length > 0) {
-    for (let admin of admins) {
-      await bot.api.sendMessage(
-        admin.id,
-        "Зарегистрировано новое отсутствие:\n" +
-          `_*От*_: ${user}\n` +
-          `_*Причина*_: ${historyRecord.reason.replace(/\./g, "\\.")}\n` +
-          `_*Дата*_: ${historyRecord.date
-            .toLocaleString('ru-RU')
-            .replace(/\./g, "\\.")}`,
-        { parse_mode: "MarkdownV2" }
-      );
-    }
-  } else {
-    console.log("Admins has not been found");
-  }
-
-  return true;
-}
-
-async function registeringConversation(
-  conversation: MyConversation,
-  ctx: MyContext
-) {
-  await ctx.reply("Пожалуйста, укажите причину отсутствия: ");
-  const { message } = await conversation.wait();
-  await ctx.reply(`Введенная причина:*\n${message?.text}*`, {
-    parse_mode: "MarkdownV2",
-  });
-
-  const historyRecord = await insertHistory({
-    //@ts-ignore
-    user_id: ctx.session.userId,
-    reason: message?.text || "",
-    date: new Date(),
-  });
-
-  await notifyAllAdmins(historyRecord, ctx.session.name);
-  const answer = "Спасибо за информацию!\nОтветственные лица уведомлены.\n";
-
-  if (ctx.session.isAdmin) {
-    await ctx.reply(answer, { reply_markup: adminMenu() });
-  } else {
-    await ctx.reply(answer, { reply_markup: simpleMenu() });
-  }
-
-  return;
-}
-
-async function changeNameConversation(
-  conversation: MyConversation,
-  ctx: MyContext
-) {
-  await ctx.reply(
-    "Пожалуйста, укажите имя, которое будет указываться в отчетах" +
-      "\n_*Важно*_: имя аккаунта так же попадает в отчет, так что вам не спрятаться😈",
-    { parse_mode: "MarkdownV2" }
-  );
-  const { message } = await conversation.wait();
-
-  await upsertUser({
-    //@ts-ignore
-    id: ctx.session.userId,
-    username: ctx.msg?.from?.username,
-    name: message?.text,
-    isAdmin: ctx.session.isAdmin,
-    isNotifications: !ctx.session.isNotifications,
-  });
-
-  await ctx.reply(`Введенное имя:*\n${message?.text}*`, {
-    parse_mode: "MarkdownV2",
-  });
-
-  const answer = "Имя обновлено.\n";
-
-  if (ctx.session.isAdmin) {
-    await ctx.reply(answer, { reply_markup: adminMenu() });
-  } else {
-    await ctx.reply(answer, { reply_markup: simpleMenu() });
-  }
-
-  return;
-}
-
-function adminMenu(): InlineKeyboard {
-  return simpleMenu()
-    .row()
-    .text("Включить/выключить уведомления", "notifications")
-    .row()
-    .text("Получить список прогулов", "getHistory");
-}
-
-function simpleMenu(): InlineKeyboard {
-  return new InlineKeyboard()
-    .text("Зарегистрировать отсутствие", "register")
-    .row()
-    .text("Поменять имя", "changeName")
-    .row()
-    .text("Выход", "exit");
-}
+import { registeringConversation } from "./conversations/register-convo";
+import { changeNameConversation } from "./conversations/change-name-convo";
+import { adminMenu, returnKeyboard, simpleMenu } from "./keyboard/keyboard";
 
 const bot = new Bot<MyContext>(TELEGRAM_BOT_TOKEN);
 bot.use(session({ initial: () => createInitialSessionData() }));
@@ -153,11 +48,7 @@ bot.command("start", async (ctx) => {
   };
 
   const helloText = `Добрый день, ${ctx.session.name}`;
-  if (ctx.session.isAdmin) {
-    await ctx.reply(helloText, { reply_markup: adminMenu() });
-  } else {
-    await ctx.reply(helloText, { reply_markup: simpleMenu() });
-  }
+  await returnKeyboard(ctx, helloText);
 });
 
 bot.callbackQuery("exit", async (ctx) => {
@@ -179,6 +70,21 @@ bot.callbackQuery("register", async (ctx) => {
     remove_keyboard: true,
   });
   await ctx.conversation.enter("registeringConversation");
+});
+
+bot.callbackQuery("getHistory", async (ctx) => {
+  if (!ctx.session.userId) {
+    await ctx.answerCallbackQuery("Пожалуйста, выполните команду /start");
+    return;
+  }
+  //@ts-ignore
+  await ctx.api.editMessageReplyMarkup(ctx.chat?.id, ctx.msg?.message_id, {
+    remove_keyboard: true,
+  });
+
+  const history = await getHistory();
+  ctx.reply(`${history ? JSON.stringify(history) : "Записи не найдены"}`);
+  await returnKeyboard(ctx, "Меню:");
 });
 
 bot.callbackQuery("notifications", async (ctx) => {

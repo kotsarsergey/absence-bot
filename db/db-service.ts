@@ -43,10 +43,20 @@ export async function getUser(id: number): Promise<User> {
 }
 
 export async function getAdmins(): Promise<User[]> {
-  const result = await knexInstance<User>("users")
-    .select("*")
-    .where("is_admin","=",true)
-    .andWhere("is_notifications","=",true)
+  let result: User[];
+  try {
+    console.log("trying to get admins");
+    result = await knexInstance<User>("users")
+      .select("*")
+      .where("is_admin", "=", true)
+      .andWhere("is_notifications", "=", true);
+  } catch (e) {
+    console.log(
+      "got error while getting admins with error\n",
+      JSON.stringify(e)
+    );
+    throw e;
+  }
 
   return result;
 }
@@ -78,6 +88,27 @@ export async function upsertUser(upsertData: {
   } catch (e) {
     throw new Error(`Got new error while upserting: \n${e}`);
   }
+}
+
+export async function getHistory(): Promise<History[]> {
+  let result: History[];
+  try {
+    console.log("trying to get history");
+    result = await knexInstance<History>("history")
+      .select("users.username", "users.name", "history.*")
+      .leftJoin("users", function () {
+        this.on("users.id", "=", "history.user_id");
+      })
+      .where("history.date", ">", "2022-01-01");
+  } catch (e) {
+    console.log(
+      "got error while getting history with error\n",
+      JSON.stringify(e)
+    );
+    throw e;
+  }
+
+  return result;
 }
 
 export async function insertHistory(historyData: History): Promise<History> {
