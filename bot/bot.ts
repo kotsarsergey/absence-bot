@@ -78,7 +78,7 @@ bot.callbackQuery("getHistory", async (ctx) => {
   });
 
   const history = await getHistory();
-  ctx.reply(`${history ? JSON.stringify(history) : "Записи не найдены"}`);
+  ctx.reply(`${history.length === 0 ? JSON.stringify(history,null,2) : "Записи не найдены"}`);
   await returnKeyboard(ctx, "Меню:");
 });
 

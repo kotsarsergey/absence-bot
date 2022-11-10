@@ -17,7 +17,10 @@ async function notifyAllAdmins(
     )}`
   );
 
-  const formattedReason = historyRecord.reason.replace(/[.,()?*{};:'"<>`]/g, "\\$");
+  const formattedReason = historyRecord.reason.replace(
+    /[.,()?*{};:'"<>-`]/g,
+    "\\$"
+  );
 
   if (admins.length > 0) {
     for (let admin of admins) {
@@ -43,7 +46,7 @@ export async function registeringConversation(
   conversation: MyConversation,
   ctx: MyContext
 ) {
-  let answer:string
+  let answer: string;
 
   await ctx.reply("Пожалуйста, укажите причину отсутствия: ");
   const { message } = await conversation.wait();
@@ -51,9 +54,10 @@ export async function registeringConversation(
   if (!message) {
     answer = "Вы ввели некорректное значение, попробуйте еще раз чуть позже";
   } else {
-    const formattedReason = message.text!.replace(/[.,()?*{};:'"<>`]/g, "\\$&");
-
-    console.log("\naleeeee: ", formattedReason);
+    const formattedReason = message.text!.replace(
+      /[.,()?*{};:'"<>-`]/g,
+      "\\$"
+    );
 
     await ctx.reply(`Введенная причина:*\n${formattedReason}*`, {
       parse_mode: "MarkdownV2",
