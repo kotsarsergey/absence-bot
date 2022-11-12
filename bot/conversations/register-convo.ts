@@ -5,6 +5,8 @@ import {
 } from "../interfaces/custom-context.interface";
 import { returnKeyboard } from "../keyboard/keyboard";
 
+const REGEX_STRING = /[.,()?!|+=_&%$#@*{};:'"<>-`]/g
+
 async function notifyAllAdmins(
   historyRecord: History,
   user: string,
@@ -18,7 +20,7 @@ async function notifyAllAdmins(
   );
 
   const formattedReason = historyRecord.reason.replace(
-    /[.,()?*{};:'"<>-`]/g,
+    REGEX_STRING,
     "\\$"
   );
 
@@ -55,7 +57,7 @@ export async function registeringConversation(
     answer = "Вы ввели некорректное значение, попробуйте еще раз чуть позже";
   } else {
     const formattedReason = message.text!.replace(
-      /[.,()?*{};:'"<>-`]/g,
+      REGEX_STRING,
       "\\$"
     );
 

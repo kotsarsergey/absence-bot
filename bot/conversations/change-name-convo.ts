@@ -8,14 +8,13 @@ export async function changeNameConversation(
   ) {
     await ctx.reply(
       "Пожалуйста, укажите имя, которое будет указываться в отчетах" +
-        "\n_*Важно*_: имя аккаунта так же попадает в отчет, так что вам не спрятаться😈",
+        "\n_*Важно*_: название аккаунта и ID так же попадают в отчет, так что вам не спрятаться😈",
       { parse_mode: "MarkdownV2" }
     );
     const { message } = await conversation.wait();
   
     await upsertUser({
-      //@ts-ignore
-      id: ctx.session.userId,
+      id: ctx.session.userId!,
       username: ctx.msg?.from?.username,
       name: message?.text,
       isAdmin: ctx.session.isAdmin,

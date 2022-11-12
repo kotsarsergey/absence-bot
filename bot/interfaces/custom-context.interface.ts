@@ -17,7 +17,7 @@ export type MyConversation = Conversation<MyContext>;
 export function createInitialSessionData(): SessionData {
   return {
     isAdmin: false,
-    name: "not found",
+    name: '',
     isNotifications: false,
   };
 }
